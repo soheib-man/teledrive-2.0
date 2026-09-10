@@ -1,7 +1,10 @@
 {
-    "telegram_api_id": "",
-    "telegram_api_hash": "",
-    "phone_number": "",
-    "db_file": "telesync.db",
-    "verbose": false
-  }
+  "telegram_api_id": 1234567,
+  "telegram_api_hash": "0123456789abcdef0123456789abcdef",
+  "phone_number": "+1234567890",
+  "db_file": "teledrive.db",
+  "session_name": "teledrive.session",
+  "temp_dir": ".teledrive_temp",
+  "chunk_size": 52428800,
+  "verbose": false
+}

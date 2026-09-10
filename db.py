@@ -1,47 +1,53 @@
-import json
-import sqlite3
-import os
-from datetime import datetime
+"""Backward compatibility shim for legacy db.py."""
 
+from pathlib import Path
+from teledrive.database import Database as ModernDatabase
+from teledrive.models import FileRecord
 
 class Database:
-    def __init__(self, db):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        db_path = os.path.join(script_dir, db)
-        self.conn = sqlite3.connect(db_path)
-        self.cur = self.conn.cursor()
-        self.cur.execute(
-            "CREATE TABLE IF NOT EXISTS file (id text PRIMARY KEY, file_name text, file_path text, file_size integer, chunks text, type text, uploaded text)"
-        )
-        self.conn.commit()
+    """Legacy wrapper delegating to modern normalized Database."""
+
+    def __init__(self, db_name: str):
+        self._db = ModernDatabase(Path(db_name))
 
     def fetch(self):
-        self.cur.execute("SELECT * FROM file")
-        rows = self.cur.fetchall()
+        files = self._db.list_files()
+        # Return tuples compatible with legacy schema: (id, name, path, size, chunks_json, type, uploaded)
+        rows = []
+        for f in files:
+            chunks = self._db.get_chunks_for_file(f.id)
+            chunks_json = str([c.chunk_index for c in chunks])
+            rows.append((f.id, f.name, f.original_path, f.size, chunks_json, f.file_type, f.created_at))
         return rows
 
-    def insert(self, id, file_name, file_path, file_size, chunks, type):
-        chunks_str = json.dumps(chunks)
-        today = datetime.now()
-        self.cur.execute(
-            "INSERT INTO file VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (id, file_name, file_path, file_size, chunks_str, type, today),
+    def insert(self, id, file_name, file_path, file_size, chunks, item_type):
+        rec = FileRecord(
+            id=str(id),
+            name=str(file_name),
+            original_path=str(file_path),
+            relative_path=str(file_name),
+            size=int(file_size),
+            sha256="",
+            file_type=str(item_type),
         )
-        self.conn.commit()
+        self._db.insert_file(rec)
 
     def remove(self, id):
-        self.cur.execute("DELETE FROM file WHERE id=?", (id,))
-        self.conn.commit()
+        self._db.delete_file_permanently(str(id))
 
     def get_file(self, id):
-        self.cur.execute("SELECT * FROM file WHERE id=?", (id,))
-        rows = self.cur.fetchall()
-        return rows
+        f = self._db.get_file_by_id(str(id))
+        if not f:
+            return []
+        chunks = self._db.get_chunks_for_file(f.id)
+        return [(f.id, f.name, f.original_path, f.size, str(chunks), f.file_type, f.created_at)]
 
     def find_file_by_name_or_path_or_id(self, file_query):
-        self.cur.execute(
-            "SELECT * FROM file WHERE file_name=? OR file_path=? OR id=? or file_name LIKE ? or file_path LIKE ? or id LIKE ? or type=?",
-            (file_query, file_query, file_query, f"%{file_query}%", f"%{file_query}%", f"%{file_query}%", file_query),
-        )
-        rows = self.cur.fetchall()
+        files, dirs = self._db.find_items_by_query(str(file_query))
+        rows = []
+        for f in files:
+            chunks = self._db.get_chunks_for_file(f.id)
+            rows.append((f.id, f.name, f.original_path, f.size, str(chunks), f.file_type, f.created_at))
+        for d in dirs:
+            rows.append((d.id, d.name, d.original_path, 0, "[]", "dir", d.created_at))
         return rows

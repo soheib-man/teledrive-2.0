@@ -10,7 +10,11 @@ __pycache__
 .history
 *session*
 *.db
+*.bak
 temp/*
+.teledrive_temp/
+teledrive_backup*.json
+.pytest_cache/
 
 
 # C extensions
