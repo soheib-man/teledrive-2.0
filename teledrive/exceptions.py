@@ -57,8 +57,9 @@ class AmbiguousQueryError(TeleDriveError):
     """Raised when a search query matches multiple items and cannot be uniquely resolved."""
 
     def __init__(self, query: str, matches: list):
+        formatted = "\n  • " + "\n  • ".join(matches) if matches else ""
         super().__init__(
-            f"Query '{query}' matched multiple items. Please specify an exact ID.",
+            f"Query '{query}' matched multiple items:{formatted}\nPlease provide more characters or specify the full ID/name.",
             exit_code=1,
         )
         self.query = query
