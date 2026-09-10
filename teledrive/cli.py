@@ -136,6 +136,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_import = subparsers.add_parser("import", help="Import/restore database metadata from JSON")
     p_import.add_argument("file", type=str, help="Path to metadata JSON backup")
 
+    # init / login
+    subparsers.add_parser("init", help="Initialize database and authenticate Telegram session")
+    subparsers.add_parser("login", help="Authenticate Telegram session")
+
     # interactive
     subparsers.add_parser("interactive", help="Start interactive shell session")
 
@@ -145,6 +149,15 @@ def build_parser() -> argparse.ArgumentParser:
 async def run_command_async(service: StorageService, args: argparse.Namespace) -> int:
     """Dispatches CLI commands to the StorageService asynchronously."""
     cmd = args.command
+
+    # --- INIT / LOGIN ---
+    if cmd in ("init", "login"):
+        print_info(f"Initializing database at [bold {COLOR_ICE_WHITE}]{service.config.db_file}[/]...")
+        print_info(f"Connecting to Telegram for [bold {COLOR_CYAN}]{service.config.phone_number}[/]...")
+        await service.telegram.connect()
+        print_success("Telegram session successfully authenticated and saved!")
+        print_success("TeleDrive 2.0 is fully initialized and ready to use.")
+        return EXIT_SUCCESS
 
     # --- UPLOAD ---
     if cmd == "upload":

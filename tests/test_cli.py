@@ -50,6 +50,14 @@ class TestCLI(unittest.TestCase):
             parser.parse_args(["rename", "item_id"])
         self.assertEqual(cm.exception.code, 2)
 
+    def test_cli_init_command(self):
+        parser = build_parser()
+        args = parser.parse_args(["init"])
+        self.assertEqual(args.command, "init")
+
+        args_login = parser.parse_args(["login"])
+        self.assertEqual(args_login.command, "login")
+
 
 if __name__ == "__main__":
     unittest.main()
