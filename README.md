@@ -1,14 +1,18 @@
 # TeleDrive 2.0
 
-> **High-Performance, Fault-Tolerant Cloud Storage Engine Powered by Telegram.**
+> Use your Telegram account as an unlimited, free personal cloud drive from the terminal.
 
-TeleDrive 2.0 transforms Telegram into a resilient, unlimited personal cloud storage backend. Designed from the ground up for data integrity, streaming performance, and safety, TeleDrive 2.0 delivers a modern developer experience featuring an **Electric-Blue TrueColor terminal interface**, zero-RAM bloat chunking, cryptographic verification, and full-featured cloud-drive management.
+TeleDrive turns Telegram's Saved Messages into a full-featured cloud storage backend. It slices large files into 50 MB chunks, streams them to Telegram, and reconstructs them whenever you need them.
+
+The original prototype worked in theory, but suffered from critical flaws: it wiped users' Saved Messages on deletion, ran out of RAM on files larger than 1 GB, couldn't handle folders with subdirectories, and corrupted re-downloaded files.
+
+**TeleDrive 2.0 is a complete rewrite** focused on reliability, data integrity, and real cloud-drive features like trash, rename, move, and directory tree preservation.
 
 ```text
-       ▄▄████████▄▄       TeleDrive 2.0 v2.0.0
+       ▄▄████████▄▄       TeleDrive 2.0
      ▄███▀▀▀    ▀▀███▄     Telegram Cloud Storage Engine
-    ███▀   ▄▄██▄▄   ▀███   Fast • Resilient • End-to-End Cloud Drive
-   ███    ████████    ███  Type teledrive --help for commands
+    ███▀   ▄▄██▄▄   ▀███   Fast • Resilient • End-to-End
+   ███    ████████    ███  Type 'teledrive --help' for commands
     ███▄   ▀▀██▀▀   ▄███   
      ▀███▄▄▄    ▄▄▄███▀    
        ▀▀████████▀▀       
@@ -16,19 +20,19 @@ TeleDrive 2.0 transforms Telegram into a resilient, unlimited personal cloud sto
 
 ---
 
-## 🚀 Key Highlights
+## Why TeleDrive 2.0?
 
-* **⚡ Constant-Memory Streaming Chunker**: Streams files in 64 KB memory buffers into 50 MB chunks without loading multi-gigabyte files into RAM. Zero disk duplication.
-* **🛡️ Zero-Collateral Safe Deletion**: Chunks are indexed strictly by exact Telegram message IDs stored in SQLite. Deletion prunes **only** the exact messages belonging to the file—never touching your personal Saved Messages.
-* **🔒 End-to-End SHA-256 Integrity**: Incremental SHA-256 hashes are computed on upload and verified on download. Reconstruction writes to atomic `.part` files with automatic overwrite protection.
-* **♻️ Resilient Transfers & Resume**: Interrupted uploads can be resumed instantly with `teledrive resume <id> --source <file>` from the last pending chunk. Automatic exponential backoff handles network dropouts and Telegram `FloodWaitError` limits.
-* **📁 Deep Recursive Directories**: Preserves complete directory hierarchies, handles nested subfolders without path traversal vulnerabilities, and restores directory trees accurately.
-* **🗄️ Full Cloud-Drive Management**:
-  * **Soft-Delete Trash & Restore**: Recover accidentally deleted files with `trash` and `restore` before running `purge`.
-  * **Zero-Cost Rename & Move**: Update file names and reorganize folder structures in SQLite metadata instantly without re-uploading Telegram chunks.
-  * **Self-Healing Repair**: Re-upload only missing or damaged chunks from a local file with `teledrive repair`.
-  * **Portable Metadata Backup**: Export and restore your complete storage database across machines using `export` and `import`.
-* **🎨 Electric-Blue Rich Terminal UX**: TrueColor 24-bit gradients, dual progress bars with live transfer speeds and ETAs, formatted tables, and an interactive shell (`teledrive interactive`).
+* **No RAM spikes on big files**: Reads and uploads in 64 KB streaming buffers. Uploading a 20 GB file uses the same ~30 MB of RAM as a 5 MB file.
+* **Safe message deletion**: Every chunk's exact Telegram message ID is tracked in SQLite. Deleting or purging files removes *only* the specific chunk messages—it will never touch your personal notes or messages in Saved Messages.
+* **Full folder trees & subdirectories**: Upload an entire folder hierarchy (including nested subfolders and empty directories). Downloading it restores the exact same tree structure locally.
+* **End-to-end SHA-256 checks**: Every chunk and file is hashed on upload and verified on download. If a byte gets corrupted during transfer, it catches it immediately before touching your destination file.
+* **Resume interrupted transfers**: Network cut out at 90%? Run `teledrive resume <id> --source <file>` to continue right from the last chunk instead of starting over.
+* **Self-healing repair**: If Telegram loses or corrupts a chunk down the road, `teledrive repair` re-uploads just the missing pieces.
+* **Real cloud drive features**:
+  * **Soft-delete Trash**: Files go to the trash bin first (`teledrive trash` / `teledrive restore`) before permanent removal (`teledrive purge`).
+  * **Instant rename & move**: Reorganize files and folders in SQLite without re-uploading anything to Telegram.
+  * **Portable backups**: Export your metadata to JSON and restore it on another computer (`teledrive export` / `import`).
+* **Clean terminal interface**: Electric-blue theme with real-time transfer speeds, dual progress bars, tree visualizer, and an interactive shell (`teledrive interactive`).
 
 ---
 
