@@ -433,18 +433,18 @@ class Database:
         if dir_match:
             return ([], [dir_match])
 
-        # Substring search
+        # Substring search across ID, name, and relative path
         escaped_query = f"%{query}%"
         trashed_filter = "" if include_trashed else "AND trashed_at IS NULL"
 
         file_rows = self.conn.execute(
-            f"SELECT * FROM files WHERE (name LIKE ? OR relative_path LIKE ?) {trashed_filter};",
-            (escaped_query, escaped_query),
+            f"SELECT * FROM files WHERE (id LIKE ? OR name LIKE ? OR relative_path LIKE ?) {trashed_filter};",
+            (escaped_query, escaped_query, escaped_query),
         ).fetchall()
 
         dir_rows = self.conn.execute(
-            f"SELECT * FROM directories WHERE (name LIKE ? OR original_path LIKE ?) {trashed_filter};",
-            (escaped_query, escaped_query),
+            f"SELECT * FROM directories WHERE (id LIKE ? OR name LIKE ? OR original_path LIKE ?) {trashed_filter};",
+            (escaped_query, escaped_query, escaped_query),
         ).fetchall()
 
         return (
